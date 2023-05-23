@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <sys/time.h>
 #include <immintrin.h>
-#include <omp.h>
 
 #define REAL double
 
@@ -21,14 +20,11 @@ const REAL a = 0.1;
 const REAL b = 0.2;
 const REAL c = 0.3;
 
-void Stencil(REAL **in, REAL **out, size_t n, int iterations, int threads)
+void Stencil(REAL **in, REAL **out, size_t n, int iterations)
 {
     (*out)[0] = (*in)[0];
     (*out)[n - 1] = (*in)[n - 1];
 
-
-
-    #pragma omp for
     for (int t = 1; t <= iterations; t++) {
         /* Update only the inner values. */
         for (int i = 1; i < n - 1; i++) {
@@ -48,14 +44,13 @@ void Stencil(REAL **in, REAL **out, size_t n, int iterations, int threads)
 
 int main(int argc, char **argv)
 {
-    if (argc != 4) {
+    if (argc != 3) {
         printf("Please specify 2 arguments (n, iterations).\n");
         return EXIT_FAILURE;
     }
 
     size_t n = atoll(argv[1]);
     int iterations = atoi(argv[2]);
-    int threads = atoi(argv[3]);
 
     REAL *in = calloc(n, sizeof(REAL));
     in[0] = 100;
@@ -63,7 +58,7 @@ int main(int argc, char **argv)
     REAL *out = malloc(n * sizeof(REAL));
 
     double duration;
-    TIME(duration, Stencil(&in, &out, n, iterations, threads););
+    TIME(duration, Stencil(&in, &out, n, iterations););
     double flops = n * iterations * 5;
     double gflopsS = (flops/duration)/1000000000;
     printf("This took %lfs, or %lf Gflops/s\n", duration, gflopsS);
