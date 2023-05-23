@@ -1,0 +1,70 @@
+\documentclass{article}
+
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{pgfplotstable}
+\pgfkeys{/pgf/number format/.cd,fixed,precision=0}
+\pgfplotstableset{col sep=comma}
+
+\begin{document}
+
+% Consider using loglogaxis
+\begin{figure}[ht]
+    \begin{tikzpicture}
+        \begin{semilogxaxis}[
+            xlabel=threads,
+            ylabel=Gflops/s,
+            legend pos = north west,
+            xticklabel style={/pgf/number format/fixed},
+            yticklabel style={/pgf/number format/fixed},
+            xtick = {1, 2, 4, 8, 16, 32},
+            xticklabels = {1, 2, 4, 8, 16, 32},
+            ytick = {200, 400, 600, 800, 1000},
+            yticklabels = {200, 400, 600, 800, 1000},
+        ]
+
+            \addplot+ [
+                error bars/.cd,
+                    y explicit,
+                    y dir=both,
+            ] table [
+                x=P,
+                y=mean,
+                y error plus expr=\thisrow{max}-\thisrow{mean},
+                y error minus expr=\thisrow{mean}-\thisrow{min},
+            ] {results/stencil.csv};
+
+            \addplot+ [
+                error bars/.cd,
+                    y explicit,
+                    y dir=both,
+            ] table [
+                x=P,
+                y=mean,
+                y error plus expr=\thisrow{max}-\thisrow{mean},
+                y error minus expr=\thisrow{mean}-\thisrow{min},
+            ] {results/stencil_opt.csv};
+
+            \addplot+ [
+                error bars/.cd,
+                    y explicit,
+                    y dir=both,
+            ] table [
+                x=P,
+                y=mean,
+                y error plus expr=\thisrow{max}-\thisrow{mean},
+                y error minus expr=\thisrow{mean}-\thisrow{min},
+            ] {results/stencil_avx2.csv};
+
+            \legend{naive, optimised, optimised + avx2}
+        \end{semilogxaxis}
+    \end{tikzpicture}
+    \caption{Compute rate in Gflops/s for three differnet versions of a three-point stencil. Input size is
+             $99900000$ or about $800$ MB per vector for the naive implementation, and $999000000$ or $8$ GB,
+             for the other implementations. All versions use $300$ iterations. Averaged over $10$ runs,
+             with error bars from the slowest to fastest run. The first one is a naive version, the second one
+             is optimised for reuse in the L2 cache, and the last one is optimised for reuse on the register level
+             as well, using avx2 instructions.}
+\end{figure}
+
+\end{document}
